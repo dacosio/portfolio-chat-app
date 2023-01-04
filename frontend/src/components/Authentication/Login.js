@@ -12,6 +12,8 @@ import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
 import { useNavigate } from "react-router";
 import Cookies from "js-cookie";
+import { useSelector, useDispatch } from "react-redux";
+import { login, selectUser } from "../../features/user/userSlice";
 
 const Login = () => {
   const [email, setEmail] = useState("");
@@ -20,7 +22,8 @@ const Login = () => {
   const toast = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-
+  const dispatch = useDispatch();
+  const { user } = useSelector(selectUser);
   const submitHandler = async () => {
     setLoading(true);
     if (!email || !password) {
@@ -35,14 +38,12 @@ const Login = () => {
       return;
     }
 
-    console.log(email, password);
     try {
       const config = {
         headers: {
           "Content-type": "application/json",
         },
       };
-      console.log(process.env.REACT_APP_BACKEND_URL);
       const { data } = await axios.post(
         `${process.env.REACT_APP_BACKEND_URL}/api/user/login`,
         {
@@ -61,9 +62,9 @@ const Login = () => {
       });
       Cookies.set("userInfo", JSON.stringify(data));
       setLoading(false);
+      dispatch(login(data));
       navigate("/chats");
     } catch (error) {
-      console.log(error);
       setLoading(false);
       toast({
         title: "Error Occurred!",
@@ -73,6 +74,7 @@ const Login = () => {
         isClosable: true,
         position: "bottom",
       });
+      Cookies.set("userInfo", null);
     }
   };
   return (

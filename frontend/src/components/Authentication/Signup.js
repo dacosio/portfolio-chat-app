@@ -12,6 +12,8 @@ import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
 import { useNavigate } from "react-router";
 import Cookies from "js-cookie";
+import { useSelector, useDispatch } from "react-redux";
+import { register, selectUser } from "../../features/user/userSlice";
 
 const Signup = () => {
   const [name, setName] = useState("");
@@ -24,6 +26,8 @@ const Signup = () => {
   const [pic, setPic] = useState();
   const [picLoading, setPicLoading] = useState(false);
   const navigate = useNavigate();
+  const dispatch = useDispatch();
+  const user = useSelector(selectUser);
 
   const postDetails = (pics) => {
     setPicLoading(true);
@@ -114,9 +118,9 @@ const Signup = () => {
         isClosable: true,
         position: "bottom",
       });
-      // localStorage.setItem("userInfo", JSON.stringify(data));
       Cookies.set("userInfo", JSON.stringify(data));
       setPicLoading(false);
+      dispatch(register(data));
       navigate("/chats");
     } catch (error) {
       toast({
@@ -128,6 +132,7 @@ const Signup = () => {
         position: "bottom",
       });
       setPicLoading(false);
+      Cookies.set("userInfo", null);
     }
   };
   return (
