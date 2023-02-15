@@ -1,4 +1,5 @@
 const User = require("../models/userModel");
+const mongoose = require("mongoose");
 
 exports.validateEmail = (email) => {
   return String(email)
@@ -26,4 +27,8 @@ exports.validateUsername = async (username) => {
     }
   } while (a);
   return username;
+};
+
+exports.toObjectId = (id) => {
+  mongoose.Types.ObjectId(id.trim());
 };

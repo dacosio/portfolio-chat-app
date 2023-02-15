@@ -10,20 +10,16 @@ import {
 import React, { useState } from "react";
 import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
-import { useNavigate } from "react-router";
-import Cookies from "js-cookie";
-import { useSelector, useDispatch } from "react-redux";
-import { login, selectUser } from "../../features/user/userSlice";
+import { history, useHistory } from "react-router-dom";
 
 const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [show, setShow] = useState(false);
   const toast = useToast();
-  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
-  const dispatch = useDispatch();
-  const { user } = useSelector(selectUser);
+  const history = useHistory();
+
   const submitHandler = async () => {
     setLoading(true);
     if (!email || !password) {
@@ -60,10 +56,9 @@ const Login = () => {
         isClosable: true,
         position: "bottom",
       });
-      Cookies.set("userInfo", JSON.stringify(data));
       setLoading(false);
-      dispatch(login(data));
-      navigate("/chats");
+      localStorage.setItem("userInfo", JSON.stringify(data));
+      history.push("/chats");
     } catch (error) {
       setLoading(false);
       toast({
@@ -74,7 +69,6 @@ const Login = () => {
         isClosable: true,
         position: "bottom",
       });
-      Cookies.set("userInfo", null);
     }
   };
   return (

@@ -10,14 +10,12 @@ import {
 import React, { useState } from "react";
 import { useToast } from "@chakra-ui/toast";
 import axios from "axios";
-import { useNavigate } from "react-router";
-import Cookies from "js-cookie";
-import { useSelector, useDispatch } from "react-redux";
-import { register, selectUser } from "../../features/user/userSlice";
+import { useHistory } from "react-router-dom";
 
 const Signup = () => {
   const [name, setName] = useState("");
   const toast = useToast();
+  const history = useHistory();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -25,9 +23,6 @@ const Signup = () => {
   const [showConfirm, setShowConfirm] = useState(false);
   const [pic, setPic] = useState();
   const [picLoading, setPicLoading] = useState(false);
-  const navigate = useNavigate();
-  const dispatch = useDispatch();
-  const user = useSelector(selectUser);
 
   const postDetails = (pics) => {
     setPicLoading(true);
@@ -41,7 +36,7 @@ const Signup = () => {
       });
       return;
     }
-    console.log(pics);
+
     if (pics.type === "image/jpeg" || pics.type === "image/png") {
       const data = new FormData();
       data.append("file", pics);
@@ -71,6 +66,7 @@ const Signup = () => {
       return;
     }
   };
+
   const signUp = async () => {
     setPicLoading(true);
     if (!name || !email || !password || !confirmPassword) {
@@ -94,7 +90,6 @@ const Signup = () => {
       });
       return;
     }
-    console.log(name, email, password, pic);
     try {
       const config = {
         headers: {
@@ -118,10 +113,9 @@ const Signup = () => {
         isClosable: true,
         position: "bottom",
       });
-      Cookies.set("userInfo", JSON.stringify(data));
+      localStorage.setItem("userInfo", JSON.stringify(data));
       setPicLoading(false);
-      dispatch(register(data));
-      navigate("/chats");
+      history.push("/chats");
     } catch (error) {
       toast({
         title: "Error occurred!",
@@ -132,7 +126,6 @@ const Signup = () => {
         position: "bottom",
       });
       setPicLoading(false);
-      Cookies.set("userInfo", null);
     }
   };
   return (

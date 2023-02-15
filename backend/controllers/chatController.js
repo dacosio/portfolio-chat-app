@@ -1,9 +1,11 @@
 const chatModel = require("../models/chatModel");
 const userModel = require("../models/userModel");
+const mongoose = require("mongoose");
+const { toObjectId } = require("../helpers/validation");
 
-//@description     Create or fetch One to One Chat
 //@route           POST /api/chat/
 //@access          Protected
+//@description     Create or fetch One to One Chat
 exports.accessChat = async (req, res, next) => {
   try {
     const { userId } = req.body;
@@ -24,7 +26,6 @@ exports.accessChat = async (req, res, next) => {
       select: "name pic email",
     });
 
-    console.log(req.user, "This");
     if (isChat.length > 0) {
       res.send(isChat[0]);
     } else {
@@ -33,11 +34,16 @@ exports.accessChat = async (req, res, next) => {
         isGroupChat: false,
         users: [req.user.id, userId],
       };
-      const createdChat = await chatModel.create(chatData);
-      const fullChat = await chatModel
-        .findOne({ _id: createdChat._id })
-        .populate("users", "-password");
-      res.status(200).json(fullChat);
+
+      try {
+        const createdChat = await chatModel.create(chatData);
+        const fullChat = await chatModel
+          .findOne({ _id: createdChat._id })
+          .populate("users", "-password");
+        res.status(200).json(fullChat);
+      } catch (error) {
+        res.status(500).json({ message: error.message });
+      }
     }
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -72,19 +78,22 @@ exports.createGroupChat = async (req, res, next) => {
       return res.status(400).send({ message: "All fields are required." });
     }
 
-    let users = JSON.parse(req.body.users);
+    let users = req.body.users.map((user) =>
+      mongoose.Types.ObjectId(user.trim())
+    );
 
     if (users.length < 2) {
       return res
         .status(400)
         .send("More than 2 users are required to form a group chat.");
     }
-    users.push(req.user);
+    users.push(mongoose.Types.ObjectId(req.user.id.trim()));
+
     const groupChat = await chatModel.create({
       chatName: req.body.name,
       users: users,
       isGroupChat: true,
-      groupAdmin: req.user,
+      groupAdmin: mongoose.Types.ObjectId(req.user.id.trim()),
     });
 
     const fullGroupChat = await chatModel
@@ -149,6 +158,14 @@ exports.addToGroup = async (req, res, next) => {
   try {
     const { chatId, userId } = req.body;
     // check if the requester is admin
+
+    const isExisting = await chatModel.find({ users: userId });
+
+    if (isExisting) {
+      return res.status(400).json({
+        message: "User is already in the chat",
+      });
+    }
 
     const added = await chatModel
       .findByIdAndUpdate(

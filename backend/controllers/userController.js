@@ -7,6 +7,10 @@ exports.register = async (req, res, next) => {
   try {
     const { name, email, password, pic } = req.body;
 
+    if (!name || !email || !password) {
+      res.status(400).json({ message: "Please enter all the fields." });
+    }
+
     if (!validateEmail(email)) {
       return res.status(400).json({ message: "Invalid email address." });
     }
@@ -37,6 +41,7 @@ exports.register = async (req, res, next) => {
       ...req.body,
       password: encryptedPassword,
     }).save();
+
     const token = generateToken(
       {
         id: user._id.toString(),
@@ -104,7 +109,8 @@ exports.getAllUsers = async (req, res, next) => {
       : {};
     const users = await userModel
       .find(keyword)
-      .find({ _id: { $ne: req.user._id } });
+      .find({ _id: { $ne: req.user._id } })
+      .select("-password");
     res.send(users);
     console.log(users, "users");
   } catch (error) {
